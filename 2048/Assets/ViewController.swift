@@ -15,7 +15,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func startGameButtonTapped(sender: UIButton) {
-        let game = GameViewController(dimension:8, threshold: 2048)
+        let game = GameViewController(dimension: 8, threshold: 2048)
         self.presentedViewController(game, animated:true, completion:nil)
     }
 
