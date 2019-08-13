@@ -8,11 +8,11 @@
 
 import UIKit
 
-class GameViewController: UIViewController, GameModelProtocol {
+class NumberTileGameViewController: UIViewController, GameModelProtocol {
     var dimension: Int
     var threshold: Int
     
-    var board: Board?
+    var board: GameboardView?
     var model: GameModel?
     
     var scoreView: ScoreViewProtocol?
@@ -26,12 +26,12 @@ class GameViewController: UIViewController, GameModelProtocol {
     
     let verticalViewOffset: CGFloat = 0.0
     
-    init(dimesion d: Int, threshold t: Int) {
+    init(dimension d: Int, threshold t: Int) {
         dimension = d > 2 ? d : 2
         threshold = t > 8 ? t : 8
         super.init(nibName: nil, bundle: nil)
         model = GameModel(dimension: dimension, threshold: threshold, delegate: self)
-        view.backgroundColor = UIColor(red: 131.0/255.0, green: 3.0/255.0, blue: 0.0/255.0, alpha: 1.0)
+        view.backgroundColor = UIColor.white
         setupSwipeControls()
     }
     
@@ -40,22 +40,22 @@ class GameViewController: UIViewController, GameModelProtocol {
     }
     
     func setupSwipeControls() {
-        let upSwipe = UISwipeGestureRecognizer(target: self, action: Selector("up:"))
+        let upSwipe = UISwipeGestureRecognizer(target: self, action: #selector(upCommand(_:)))
         upSwipe.numberOfTouchesRequired = 1
         upSwipe.direction = .up
         view.addGestureRecognizer(upSwipe)
         
-        let downSwipe = UISwipeGestureRecognizer(target: self, action: Selector("down:"))
+        let downSwipe = UISwipeGestureRecognizer(target: self, action: #selector(downCommand(_:)))
         downSwipe.numberOfTouchesRequired = 1
         downSwipe.direction = .down
         view.addGestureRecognizer(downSwipe)
         
-        let leftSwipe = UISwipeGestureRecognizer(target: self, action: Selector("left:"))
+        let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(leftCommand(_:)))
         leftSwipe.numberOfTouchesRequired = 1
         leftSwipe.direction = .left
         view.addGestureRecognizer(leftSwipe)
         
-        let rightSwipe = UISwipeGestureRecognizer(target: self, action: Selector("right:"))
+        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(rightCommand(_:)))
         rightSwipe.numberOfTouchesRequired = 1
         rightSwipe.direction = .right
         view.addGestureRecognizer(rightSwipe)
@@ -72,8 +72,8 @@ class GameViewController: UIViewController, GameModelProtocol {
         let m = model!
         b.reset()
         m.reset()
-        m.insertTileAtRandomLocation(value: 2)
-        m.insertTileAtRandomLocation(value: 2)
+        m.insertTileAtRandomLocation(withValue: 2)
+        m.insertTileAtRandomLocation(withValue: 2)
     }
     
     func setupGame() {
@@ -89,10 +89,11 @@ class GameViewController: UIViewController, GameModelProtocol {
         func yPositionForViewAtPosition(order: Int, views: [UIView]) -> CGFloat {
             assert(views.count > 0)
             assert(order >= 0 && order < views.count)
-            let viewHeight = views[order].bounds.size.height
+            //      let viewHeight = views[order].bounds.size.height
             let totalHeight = CGFloat(views.count - 1)*viewPadding + views.map({ $0.bounds.size.height})
                 .reduce(verticalViewOffset, { $0 + $1})
             let viewsTop = 0.5*(vcHeight - totalHeight) >= 0 ? 0.5*(vcHeight - totalHeight) : 0
+            
             var acc: CGFloat = 0
             for i in 0..<order {
                 acc += viewPadding + views[i].bounds.size.height
@@ -101,16 +102,17 @@ class GameViewController: UIViewController, GameModelProtocol {
         }
         
         let scoreView = ScoreView(backgroundColor: .black, textColor: .white, font: .systemFont(ofSize: 16.0), radius: 6)
+        scoreView.score = 0
         
         let padding: CGFloat = dimension > 5 ? thinPadding : thickPadding
         let v1 = boardWidth - padding*(CGFloat(dimension + 1))
         let width: CGFloat = CGFloat(v1)/CGFloat(dimension)
-        let gameboard = Board(dimension: dimension,
-                              tileWidth: width,
-                              tilePadding: padding,
-                              cornerRadius: 6,
-                              backgroundColor: .black,
-                              foregroundColor: .gray)
+        let gameboard = GameboardView(dimension: dimension,
+                                      tileWidth: width,
+                                      tilePadding: padding,
+                                      cornerRadius: 6,
+                                      backgroundColor: .black,
+                                      foregroundColor: .darkGray)
         
         let views = [scoreView, gameboard]
         
@@ -131,14 +133,14 @@ class GameViewController: UIViewController, GameModelProtocol {
         
         assert(model != nil)
         let m = model!
-        m.insertTileAtRandomLocation(value: 2)
-        m.insertTileAtRandomLocation(value: 2)
+        m.insertTileAtRandomLocation(withValue: 2)
+        m.insertTileAtRandomLocation(withValue: 2)
     }
     
     func followUp() {
         assert(model != nil)
         let m = model!
-        let (userWon, winningCoords) = m.userHasWon()
+        let (userWon, _) = m.userHasWon()
         if userWon {
             let alertView = UIAlertView()
             alertView.title = "Victory"
@@ -149,7 +151,7 @@ class GameViewController: UIViewController, GameModelProtocol {
         }
         
         let randomVal = Int(arc4random_uniform(10))
-        m.insertTileAtRandomLocation(value: randomVal == 1 ? 4 : 2)
+        m.insertTileAtRandomLocation(withValue: randomVal == 1 ? 4 : 2)
         
         if m.userHasLost() {
             NSLog("You lost...")
@@ -162,10 +164,10 @@ class GameViewController: UIViewController, GameModelProtocol {
     }
     
     @objc(up:)
-    func upCommand(r: UIGestureRecognizer!) {
+    func upCommand(_ r: UIGestureRecognizer!) {
         assert(model != nil)
         let m = model!
-        m.queueMove(direction: MoveDirection.Up, { (changed: Bool) -> () in
+        m.queueMove(direction: MoveDirection.up, onCompletion: { (changed: Bool) -> () in
             if changed {
                 self.followUp()
             }
@@ -173,10 +175,10 @@ class GameViewController: UIViewController, GameModelProtocol {
     }
     
     @objc(down:)
-    func downCommand(r: UIGestureRecognizer!) {
+    func downCommand(_ r: UIGestureRecognizer!) {
         assert(model != nil)
         let m = model!
-        m.queueMove(direction: MoveDirection.Down, { (changed: Bool) -> () in
+        m.queueMove(direction: MoveDirection.down, onCompletion: { (changed: Bool) -> () in
             if changed {
                 self.followUp()
             }
@@ -184,10 +186,10 @@ class GameViewController: UIViewController, GameModelProtocol {
     }
     
     @objc(left:)
-    func leftCommand(r: UIGestureRecognizer!) {
+    func leftCommand(_ r: UIGestureRecognizer!) {
         assert(model != nil)
         let m = model!
-        m.queueMove(direction: MoveDirection.Left, { (changed: Bool) -> () in
+        m.queueMove(direction: MoveDirection.left, onCompletion: { (changed: Bool) -> () in
             if changed {
                 self.followUp()
             }
@@ -195,38 +197,38 @@ class GameViewController: UIViewController, GameModelProtocol {
     }
     
     @objc(right:)
-    func rightCommand(r: UIGestureRecognizer!) {
+    func rightCommand(_ r: UIGestureRecognizer!) {
         assert(model != nil)
         let m = model!
-        m.queueMove(direction: MoveDirection.Right, { (changed: Bool) -> () in
+        m.queueMove(direction: MoveDirection.right, onCompletion: { (changed: Bool) -> () in
             if changed {
                 self.followUp()
             }
         })
     }
-    func scoreChange(score: Int) {
+    func scoreChanged(to score: Int) {
         if scoreView == nil {
             return
         }
-        let s = ScoreView!
-        s.scoreChaged(newScore: score)
+        let s = scoreView!
+        s.scoreChanged(to: score)
     }
     
     func moveOneTile(from: (Int, Int), to: (Int, Int), value: Int) {
         assert(board != nil)
         let b = board!
-        b.moveOneTile(from, to: to, value: value)
+        b.moveOneTile(from: from, to: to, value: value)
     }
     
-    func moveTwoTile(from: (Int, Int), to: (Int, Int), value: Int) {
+    func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
         assert(board != nil)
         let b = board!
-        b.moveTwoTiles(from, to: to, value: value)
+        b.moveTwoTiles(from: from, to: to, value: value)
     }
     
-    func isertTile(location: (Int, Int), value: Int) {
+    func insertTile(at location: (Int, Int), withValue value: Int) {
         assert(board != nil)
         let b = board!
-        b.insertTile(location, value: value)
+        b.insertTile(at: location, value: value)
     }
 }

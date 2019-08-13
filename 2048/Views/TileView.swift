@@ -8,8 +8,7 @@
 
 import UIKit
 
-class Tile: UIView {
-    var delegate: AppearanceProtocol
+class TileView: UIView {
     var value: Int = 0 {
         didSet {
             backgroundColor = delegate.tileColor(value)
@@ -17,12 +16,14 @@ class Tile: UIView {
             numberLabel.text="\(value)"
         }
     }
-    var numberLabel: UILabel
+    
+    unowned let delegate: AppearanceProviderProtocol
+    let numberLabel: UILabel
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("NSCoding not supported")
     }
-    init(position: CGPoint, width: CGFloat, value: Int, radius:CGFloat, delegate d: AppearanceProtocol) {
+    init(position: CGPoint, width: CGFloat, value: Int, radius:CGFloat, delegate d: AppearanceProviderProtocol) {
         delegate = d
         numberLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: width))
         numberLabel.textAlignment = NSTextAlignment.center
@@ -30,7 +31,6 @@ class Tile: UIView {
         numberLabel.font = delegate.fontForNumbers()
         
         super.init(frame: CGRect(x: position.x, y: position.y, width: width, height: width))
-        
         addSubview(numberLabel)
         layer.cornerRadius = radius
         

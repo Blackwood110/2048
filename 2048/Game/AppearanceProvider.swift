@@ -8,14 +8,14 @@
 
 import UIKit
 
-protocol AppearanceProtocol: class {
-    func tileColor(value: Int) -> UIColor
-    func numberColor(value: Int) -> UIColor
+protocol AppearanceProviderProtocol: class {
+    func tileColor(_ value: Int) -> UIColor
+    func numberColor(_ value: Int) -> UIColor
     func fontForNumbers() -> UIFont
 }
 
-class Appearance: AppearanceProtocol {
-    func tileColor(value: Int) -> UIColor {
+class AppearanceProvider: AppearanceProviderProtocol {
+    func tileColor(_ value: Int) -> UIColor {
         switch value {
         case 2:
             return UIColor(displayP3Red: 238.0/255.0, green: 228.0/255.0, blue: 218.0/255.0, alpha: 1.0)
@@ -36,7 +36,7 @@ class Appearance: AppearanceProtocol {
         }
     }
     
-    func numberColor(value: Int) -> UIColor {
+    func numberColor(_ value: Int) -> UIColor {
         switch value {
         case 2,4:
             return UIColor(displayP3Red: 119.0/255.0, green: 110.0/255.0, blue: 101.0/255.0, alpha: 1.0)

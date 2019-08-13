@@ -8,14 +8,14 @@
 
 import UIKit
 
-class Board: UIView {
+class GameboardView: UIView {
     var dimension: Int
     var tileWidth: CGFloat
     var tilePadding: CGFloat
     var cornerRadius: CGFloat
-    var tiles: Dictionary<NSIndexPath, Tile>
+    var tiles: Dictionary<IndexPath, TileView>
     
-    let provider = Appearance()
+    let provider = AppearanceProvider()
     
     let tilePopStartScale: CGFloat = 0.1
     let tilePopMaxScale: CGFloat = 1.1
@@ -47,13 +47,13 @@ class Board: UIView {
     }
     
     func reset() {
-        for (key, tile) in tiles {
+        for (_, tile) in tiles {
             tile.removeFromSuperview()
         }
-        tiles.removeAll(leepCapacity: true)
+        tiles.removeAll(keepingCapacity: true)
     }
     
-    func positionIsValid(pos: (Int, Int)) -> Bool {
+    func positionIsValid(_ pos: (Int, Int)) -> Bool {
         let (x, y) = pos
         return (x >= 0 && x < dimension && y >= 0 && y < dimension)
     }
@@ -63,9 +63,9 @@ class Board: UIView {
         var xCursor = tilePadding
         var yCursor: CGFloat
         let bgRadius = (cornerRadius >= 2) ? cornerRadius - 2 : 0
-        for i in 0..<dimension {
+        for _ in 0..<dimension {
             yCursor = tilePadding
-            for j in 0..<dimension {
+            for _ in 0..<dimension {
                 let background = UIView(frame: CGRect(x: xCursor, y: yCursor, width: tileWidth, height: tileWidth))
                 background.layer.cornerRadius = bgRadius
                 background.backgroundColor = tileColor
@@ -76,23 +76,22 @@ class Board: UIView {
         }
     }
     
-    func insertTile(pos: (Int, Int), value: Int) {
-        assert(positionIsValid(pos: pos))
+    func insertTile(at pos: (Int, Int), value: Int) {
+        assert(positionIsValid(pos))
         let (row, col) = pos
         let x = tilePadding + CGFloat(col)*(tileWidth + tilePadding)
         let y = tilePadding + CGFloat(row)*(tileWidth + tilePadding)
         let r = (cornerRadius >= 2) ? cornerRadius - 2 : 0
-        let tile = Tile(position: CGPoint(x: x, y: y), width: tileWidth, value: value, radius: r, delegate: provider)
-        tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
+        let tile = TileView(position: CGPoint(x: x, y: y), width: tileWidth, value: value, radius: r, delegate: provider)
+        tile.layer.setAffineTransform(CGAffineTransform(scaleX: tilePopStartScale, y: tilePopStartScale))
         
         addSubview(tile)
         bringSubviewToFront(tile)
-        tiles[NSIndexPath(row: row, section: col)] = tile
+        tiles[IndexPath(row: row, section: col)] = tile
         
-        UIView.animate(withDuration: tileExpandTime, delay: tilePopDelay, options: .transitionCurlUp, animations: {
-            () -> Void in
+        UIView.animate(withDuration: tileExpandTime, delay: tilePopDelay, options: UIView.AnimationOptions(), animations: {
             tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
-        }, completion: { (finished) -> Void in
+        }, completion: { finished in
             UIView.animate(withDuration: self.tileContractTime, animations: {
                 () -> Void in
                 tile.layer.setAffineTransform(CGAffineTransform.identity)
@@ -101,14 +100,15 @@ class Board: UIView {
     }
     
     func moveOneTile(from: (Int, Int), to: (Int, Int), value: Int) {
-        assert(positionIsValid(pos: from) && positionIsValid(pos: to))
+        assert(positionIsValid(from) && positionIsValid(to))
         let (fromRow, fromCol) = from
         let (toRow, toCol) = to
-        let fromKey = NSIndexPath(row: fromRow, section: fromCol)
-        let toKey = NSIndexPath(row: toRow, section: toCol)
+        let fromKey = IndexPath(row: fromRow, section: fromCol)
+        let toKey = IndexPath(row: toRow, section: toCol)
         
-        assert(tiles[fromKey] != nil)
-        let tile = tiles[fromKey]!
+        guard let tile = tiles[fromKey] else {
+            assert(false, "placeholder error")
+        }
         let endTile = tiles[toKey]
         
         var finalFrame = tile.frame
@@ -120,10 +120,9 @@ class Board: UIView {
         
         let shouldPop = endTile != nil
         UIView.animate(withDuration: perSquareSlideDuration, delay: 0.0, options: .beginFromCurrentState, animations: {
-            () -> Void in
             tile.frame = finalFrame
-        }) { (finished) in
-             tile.value = value
+        }, completion: { (finished: Bool) -> Void in
+            tile.value = value
             endTile?.removeFromSuperview()
             if !shouldPop || !finished {
                 return
@@ -131,30 +130,30 @@ class Board: UIView {
             tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tileMergeStartScale, y: self.tileMergeStartScale))
             
             UIView.animate(withDuration: self.tileMergeExpandTime, animations: {
-                () -> Void in
                 tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
-            }, completion: { (finished) in
+            }, completion: { finished in
                 UIView.animate(withDuration: self.tileMergeContractTime, animations: {
-                    () -> Void in
                     tile.layer.setAffineTransform(CGAffineTransform.identity)
                 })
             })
-        }
+        })
     }
     
     func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
-        assert(positionIsValid(pos: from.0) && positionIsValid(pos: from.1) && positionIsValid(pos: to))
+        assert(positionIsValid(from.0) && positionIsValid(from.1) && positionIsValid(to))
         let (fromRowA, fromColA) = from.0
         let (fromRowB, fromColB) = from.1
         let (toRow, toCol) = to
-        let fromKeyA = NSIndexPath(row: fromRowA, section: fromColA)
-        let fromKeyB = NSIndexPath(row: fromRowB, section: fromColB)
-        let toKey = NSIndexPath(row: toRow, section: toCol)
+        let fromKeyA = IndexPath(row: fromRowA, section: fromColA)
+        let fromKeyB = IndexPath(row: fromRowB, section: fromColB)
+        let toKey = IndexPath(row: toRow, section: toCol)
         
-        assert(tiles[fromKeyA] != nil)
-        assert(tiles[fromKeyB] != nil)
-        let tileA = tiles[fromKeyA]!
-        let tileB = tiles[fromKeyB]!
+        guard let tileA = tiles[fromKeyA] else {
+            assert(false, "placeholder error")
+        }
+        guard let tileB = tiles[fromKeyB] else {
+            assert(false, "placeholder error")
+        }
         
         var finalFrame = tileA.frame
         finalFrame.origin.x = tilePadding + CGFloat(toCol)*(tileWidth + tilePadding)
@@ -167,10 +166,9 @@ class Board: UIView {
         tiles[toKey] = tileA
         
         UIView.animate(withDuration: perSquareSlideDuration, delay: 0.0, options: .beginFromCurrentState, animations: {
-            () -> Void in
             tileA.frame = finalFrame
             tileB.frame = finalFrame
-        }) { (finished) in
+        }, completion: { finished in
             tileA.value = value
             tileB.removeFromSuperview()
             if !finished {
@@ -179,14 +177,12 @@ class Board: UIView {
             tileA.layer.setAffineTransform(CGAffineTransform(scaleX: self.tileMergeStartScale, y: self.tileMergeStartScale))
             
             UIView.animate(withDuration: self.tileMergeExpandTime, animations: {
-                () -> Void in
                 tileA.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
-            }, completion: { (finished) in
+            }, completion: { finished in
                 UIView.animate(withDuration: self.tileMergeContractTime, animations: {
-                    () -> Void in
                     tileA.layer.setAffineTransform(.identity)
                 })
             })
-        }
+        })
     }
 }

@@ -22,6 +22,9 @@
                                 <rect key="frame" x="141" y="318" width="92" height="31"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Start"/>
+                                <connections>
+                                    <action selector="startGameButtonTappedWithSender:" destination="BYZ-38-t0r" eventType="touchUpInside" id="wy2-FD-UGw"/>
+                                </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="2048" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cRz-fy-Dz4">
                                 <rect key="frame" x="165" y="143" width="68" height="58"/>
