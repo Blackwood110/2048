@@ -8,20 +8,25 @@
 
 import UIKit
 
+// Контроллер представления, для связывания модели и вьюшки.
+// Поток данных работает следующим образом: пользовательский ввод достигает контроллера и передается в модель.
+// расчеты, вычисленные моделью возвращаются в контроллер и перенаправляются в вьюшки для обновления своего состояния
 class NumberTileGameViewController: UIViewController, GameModelProtocol {
+    // сколько плиток в обоих направлениях содержит игровая доска
     var dimension: Int
+    // значение выигршыной плитки
     var threshold: Int
     
     var board: GameboardView?
     var model: GameModel?
     
     var scoreView: ScoreViewProtocol?
-    
+    // ширина игрового поля
     let boardWidth: CGFloat = 230.0
-    
+    // расстояние между плитками
     let thinPadding: CGFloat = 3.0
     let thickPadding: CGFloat = 6.0
-    
+    // Растояние между различными элементами
     let viewPadding: CGFloat = 10.0
     
     let verticalViewOffset: CGFloat = 0.0
@@ -79,7 +84,7 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
     func setupGame() {
         let vcHeight = view.bounds.size.height
         let vcWidth = view.bounds.size.width
-        
+        // эта вложенная функция, обеспечивает Х-позицию для вида компонента
         func xPositionToCenterView(v: UIView) -> CGFloat {
             let viewWidth = v.bounds.size.width
             let tentativeX = 0.5*(vcWidth - viewWidth)
@@ -94,16 +99,17 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
                 .reduce(verticalViewOffset, { $0 + $1})
             let viewsTop = 0.5*(vcHeight - totalHeight) >= 0 ? 0.5*(vcHeight - totalHeight) : 0
             
+            // Не знаю, как нарезать массив еще
             var acc: CGFloat = 0
             for i in 0..<order {
                 acc += viewPadding + views[i].bounds.size.height
             }
             return viewsTop + acc
         }
-        
+        // создать представление счета
         let scoreView = ScoreView(backgroundColor: .black, textColor: .white, font: .systemFont(ofSize: 16.0), radius: 6)
         scoreView.score = 0
-        
+        // создать игровую доску
         let padding: CGFloat = dimension > 5 ? thinPadding : thickPadding
         let v1 = boardWidth - padding*(CGFloat(dimension + 1))
         let width: CGFloat = CGFloat(v1)/CGFloat(dimension)
@@ -113,7 +119,7 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
                                       cornerRadius: 6,
                                       backgroundColor: .black,
                                       foregroundColor: .darkGray)
-        
+        //установить рамки
         let views = [scoreView, gameboard]
         
         var f = scoreView.frame
@@ -125,7 +131,7 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
         f.origin.x = xPositionToCenterView(v: gameboard)
         f.origin.y = yPositionForViewAtPosition(order: 1, views: views)
         gameboard.frame = f
-        
+        // добавить в состояние игры
         view.addSubview(gameboard)
         board = gameboard
         view.addSubview(scoreView)
@@ -142,18 +148,22 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
         let m = model!
         let (userWon, _) = m.userHasWon()
         if userWon {
+            // TODO: добавить делегат "вы выиграли"
             let alertView = UIAlertView()
             alertView.title = "Victory"
             alertView.message = "Youw won!"
             alertView.addButton(withTitle: "Cancel")
             alertView.show()
+            // TODO: здесь необходимо остановить игру, пока пользователь не нажмет "новая игра"
             return
         }
         
+        // вставляем значения плиток
         let randomVal = Int(arc4random_uniform(10))
         m.insertTileAtRandomLocation(withValue: randomVal == 1 ? 4 : 2)
-        
+        // в этот момент пользователь может проиграть
         if m.userHasLost() {
+            // TODO: алерт делегат вы проиграли
             NSLog("You lost...")
             let alertView = UIAlertView()
             alertView.title = "Defeat"

@@ -46,6 +46,7 @@ class GameboardView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // Перезрагрузить игровую доску
     func reset() {
         for (_, tile) in tiles {
             tile.removeFromSuperview()
@@ -53,6 +54,7 @@ class GameboardView: UIView {
         tiles.removeAll(keepingCapacity: true)
     }
     
+    // Вернуть, является ли эта позиция валидной, используется для проверки границ.
     func positionIsValid(_ pos: (Int, Int)) -> Bool {
         let (x, y) = pos
         return (x >= 0 && x < dimension && y >= 0 && y < dimension)
@@ -66,6 +68,7 @@ class GameboardView: UIView {
         for _ in 0..<dimension {
             yCursor = tilePadding
             for _ in 0..<dimension {
+                // рисуем каждую плитку
                 let background = UIView(frame: CGRect(x: xCursor, y: yCursor, width: tileWidth, height: tileWidth))
                 background.layer.cornerRadius = bgRadius
                 background.backgroundColor = tileColor
@@ -76,6 +79,7 @@ class GameboardView: UIView {
         }
     }
     
+    // Отрисовать игровое поле, вставив плитку в указанное место. Плитка будет вставлена с анимацией.
     func insertTile(at pos: (Int, Int), value: Int) {
         assert(positionIsValid(pos))
         let (row, col) = pos
@@ -88,8 +92,9 @@ class GameboardView: UIView {
         addSubview(tile)
         bringSubviewToFront(tile)
         tiles[IndexPath(row: row, section: col)] = tile
-        
+        // Добавить на доску
         UIView.animate(withDuration: tileExpandTime, delay: tilePopDelay, options: UIView.AnimationOptions(), animations: {
+            // Вывести плитку анимацией
             tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
         }, completion: { finished in
             UIView.animate(withDuration: self.tileContractTime, animations: {
@@ -99,6 +104,7 @@ class GameboardView: UIView {
         })
     }
     
+    // Обновить игровое поле при перемещении плитки из одного места в другое.
     func moveOneTile(from: (Int, Int), to: (Int, Int), value: Int) {
         assert(positionIsValid(from) && positionIsValid(to))
         let (fromRow, fromCol) = from
@@ -106,20 +112,22 @@ class GameboardView: UIView {
         let fromKey = IndexPath(row: fromRow, section: fromCol)
         let toKey = IndexPath(row: toRow, section: toCol)
         
+        // получить плитки
         guard let tile = tiles[fromKey] else {
             assert(false, "placeholder error")
         }
         let endTile = tiles[toKey]
-        
+        // сделать рамку
         var finalFrame = tile.frame
         finalFrame.origin.x = tilePadding + CGFloat(toCol)*(tileWidth + tilePadding)
         finalFrame.origin.y = tilePadding + CGFloat(toRow)*(tileWidth + tilePadding)
-        
+        // обновить состояние доски
         tiles.removeValue(forKey: fromKey)
         tiles[toKey] = tile
-        
+        // анимация
         let shouldPop = endTile != nil
         UIView.animate(withDuration: perSquareSlideDuration, delay: 0.0, options: .beginFromCurrentState, animations: {
+            // слайд-плитка
             tile.frame = finalFrame
         }, completion: { (finished: Bool) -> Void in
             tile.value = value
@@ -133,12 +141,14 @@ class GameboardView: UIView {
                 tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
             }, completion: { finished in
                 UIView.animate(withDuration: self.tileMergeContractTime, animations: {
+                    // привести плитку к оригинальному размеру
                     tile.layer.setAffineTransform(CGAffineTransform.identity)
                 })
             })
         })
     }
     
+    // Обновить игровое поле6 переместив две плитки из одного места в их общее местоназначения.
     func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
         assert(positionIsValid(from.0) && positionIsValid(from.1) && positionIsValid(to))
         let (fromRowA, fromColA) = from.0

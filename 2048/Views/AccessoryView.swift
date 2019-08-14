@@ -12,6 +12,7 @@ protocol ScoreViewProtocol {
     func scoreChanged(to s: Int)
 }
 
+// Вид, которые отображает счет игрока
 class ScoreView: UIView, ScoreViewProtocol {
     var score: Int = 0 {
         didSet {
@@ -42,6 +43,8 @@ class ScoreView: UIView, ScoreViewProtocol {
     }
 }
 
+// Вид, отображающий несколько кнопок для управления приложением.
 class ControlView {
     let defaultFrame = CGRect(x: 0, y: 0, width: 140, height: 40)
+    // TODO: Внедри меня
 }

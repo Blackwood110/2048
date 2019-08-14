@@ -8,6 +8,7 @@
 
 import UIKit
 
+// Вьюшка, представляющая одну плитку
 class TileView: UIView {
     var value: Int = 0 {
         didSet {

@@ -15,6 +15,7 @@ protocol AppearanceProviderProtocol: class {
 }
 
 class AppearanceProvider: AppearanceProviderProtocol {
+    // Цвет плитки, для конкретного значения
     func tileColor(_ value: Int) -> UIColor {
         switch value {
         case 2:
@@ -35,7 +36,7 @@ class AppearanceProvider: AppearanceProviderProtocol {
             return UIColor.white
         }
     }
-    
+    // цвет цифры, для нужного значения
     func numberColor(_ value: Int) -> UIColor {
         switch value {
         case 2,4:
@@ -45,6 +46,7 @@ class AppearanceProvider: AppearanceProviderProtocol {
         }
     }
     
+    // шрифт, для цифр
     func fontForNumbers() -> UIFont {
         if let font = UIFont(name: "HelveticaNeue-Bold", size: 20) {
             return font

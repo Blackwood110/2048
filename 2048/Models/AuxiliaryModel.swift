@@ -8,31 +8,37 @@
 
 import Foundation
 
+// Перечисления направлений движения в игре
 enum MoveDirection {
     case up, down, left, right
 }
 
+// Команда перемещения
 struct MoveCommand {
     var direction: MoveDirection
     let completion: (Bool) -> ()
 }
 
+// Перечисление того, какие плитки должны будут перемещены и объединены
 enum MoveOrder {
     case singleMoveOrder(source: Int, destination: Int, value: Int, wasMerge: Bool)
     case doubleMoveOrder(firstSource: Int, secondSource: Int, destination: Int, value: Int)
 }
 
+// Перечисление представляющее пустое пространство или плитку на доске
 enum TileObject {
     case empty
     case tile(Int)
 }
 
+// Перечисление того, как доска должна измениться, когда происходит перемещение ячеек
 enum ActionToken {
     case noAction(source: Int, value: Int)
     case move(source: Int, value: Int)
     case singleCombine(source: Int, value: Int)
     case doubleCombine(source: Int, second: Int, value: Int)
     
+    // Получение значения независимо от типа
     func getValue() -> Int {
         switch self {
         case let .noAction(source: _, value: v): return v
@@ -42,6 +48,7 @@ enum ActionToken {
         }
     }
     
+    // Получение источника независимо от типа
     func getSource() -> Int {
         switch self {
         case let .noAction(source: s, value: _): return s
@@ -52,6 +59,7 @@ enum ActionToken {
     }
 }
 
+// Структура, представляющая игровую доску. Так как структура использует дженерики, ее можно использовать для последюущих игр без изменения
 struct SquareGameboard<T> {
     let dimension: Int
     var boardArray: [T]
@@ -74,6 +82,7 @@ struct SquareGameboard<T> {
         }
     }
     
+    // Помечаем эту функцию, как мутирующую, поскольку она меняет родительскую структуру
     mutating func setAll(to item: T) {
         for i in 0..<dimension {
             for j in 0..<dimension {
