@@ -96,12 +96,11 @@ class GameboardView: UIView {
         UIView.animate(withDuration: tileExpandTime, delay: tilePopDelay, options: UIView.AnimationOptions(), animations: {
             // Вывести плитку анимацией
             tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
-        }, completion: { finished in
+        }) { finished in
             UIView.animate(withDuration: self.tileContractTime, animations: {
-                () -> Void in
                 tile.layer.setAffineTransform(CGAffineTransform.identity)
             })
-        })
+        }
     }
     
     // Обновить игровое поле при перемещении плитки из одного места в другое.
@@ -129,7 +128,7 @@ class GameboardView: UIView {
         UIView.animate(withDuration: perSquareSlideDuration, delay: 0.0, options: .beginFromCurrentState, animations: {
             // слайд-плитка
             tile.frame = finalFrame
-        }, completion: { (finished: Bool) -> Void in
+        }) { finished in
             tile.value = value
             endTile?.removeFromSuperview()
             if !shouldPop || !finished {
@@ -145,7 +144,7 @@ class GameboardView: UIView {
                     tile.layer.setAffineTransform(CGAffineTransform.identity)
                 })
             })
-        })
+        }
     }
     
     // Обновить игровое поле6 переместив две плитки из одного места в их общее местоназначения.
@@ -178,7 +177,7 @@ class GameboardView: UIView {
         UIView.animate(withDuration: perSquareSlideDuration, delay: 0.0, options: .beginFromCurrentState, animations: {
             tileA.frame = finalFrame
             tileB.frame = finalFrame
-        }, completion: { finished in
+        }) { finished in
             tileA.value = value
             tileB.removeFromSuperview()
             if !finished {
@@ -188,11 +187,11 @@ class GameboardView: UIView {
             
             UIView.animate(withDuration: self.tileMergeExpandTime, animations: {
                 tileA.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
-            }, completion: { finished in
+            }) { finished in
                 UIView.animate(withDuration: self.tileMergeContractTime, animations: {
                     tileA.layer.setAffineTransform(.identity)
                 })
-            })
-        })
+            }
+        }
     }
 }

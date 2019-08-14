@@ -36,7 +36,7 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
         threshold = t > 8 ? t : 8
         super.init(nibName: nil, bundle: nil)
         model = GameModel(dimension: dimension, threshold: threshold, delegate: self)
-        view.backgroundColor = UIColor.white
+        view.backgroundColor = .white
         setupSwipeControls()
     }
     
@@ -137,15 +137,17 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
         view.addSubview(scoreView)
         self.scoreView = scoreView
         
-        assert(model != nil)
-        let m = model!
+        guard let m = model else {
+            return
+        }
         m.insertTileAtRandomLocation(withValue: 2)
         m.insertTileAtRandomLocation(withValue: 2)
     }
     
     func followUp() {
-        assert(model != nil)
-        let m = model!
+        guard let m = model else {
+            return
+        }
         let (userWon, _) = m.userHasWon()
         if userWon {
             // TODO: добавить делегат "вы выиграли"
@@ -175,9 +177,10 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
     
     @objc(up:)
     func upCommand(_ r: UIGestureRecognizer!) {
-        assert(model != nil)
-        let m = model!
-        m.queueMove(direction: MoveDirection.up, onCompletion: { (changed: Bool) -> () in
+        guard let m = model else {
+            return
+        }
+        m.queueMove(direction: MoveDirection.up, onCompletion: { changed in
             if changed {
                 self.followUp()
             }
@@ -186,9 +189,10 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
     
     @objc(down:)
     func downCommand(_ r: UIGestureRecognizer!) {
-        assert(model != nil)
-        let m = model!
-        m.queueMove(direction: MoveDirection.down, onCompletion: { (changed: Bool) -> () in
+        guard let m = model else {
+            return
+        }
+        m.queueMove(direction: MoveDirection.down, onCompletion: { changed in
             if changed {
                 self.followUp()
             }
@@ -197,9 +201,10 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
     
     @objc(left:)
     func leftCommand(_ r: UIGestureRecognizer!) {
-        assert(model != nil)
-        let m = model!
-        m.queueMove(direction: MoveDirection.left, onCompletion: { (changed: Bool) -> () in
+        guard let m = model else {
+            return
+        }
+        m.queueMove(direction: MoveDirection.left, onCompletion: { changed in
             if changed {
                 self.followUp()
             }
@@ -208,37 +213,40 @@ class NumberTileGameViewController: UIViewController, GameModelProtocol {
     
     @objc(right:)
     func rightCommand(_ r: UIGestureRecognizer!) {
-        assert(model != nil)
-        let m = model!
-        m.queueMove(direction: MoveDirection.right, onCompletion: { (changed: Bool) -> () in
+        guard let m = model else {
+            return
+        }
+        m.queueMove(direction: MoveDirection.right, onCompletion: { changed in
             if changed {
                 self.followUp()
             }
         })
     }
     func scoreChanged(to score: Int) {
-        if scoreView == nil {
+        guard let s = scoreView else {
             return
         }
-        let s = scoreView!
         s.scoreChanged(to: score)
     }
     
     func moveOneTile(from: (Int, Int), to: (Int, Int), value: Int) {
-        assert(board != nil)
-        let b = board!
+        guard let b = board else {
+            return
+        }
         b.moveOneTile(from: from, to: to, value: value)
     }
     
     func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
-        assert(board != nil)
-        let b = board!
+        guard let b = board else {
+            return
+        }
         b.moveTwoTiles(from: from, to: to, value: value)
     }
     
     func insertTile(at location: (Int, Int), withValue value: Int) {
-        assert(board != nil)
-        let b = board!
+        guard let b = board else {
+            return
+        }
         b.insertTile(at: location, value: value)
     }
 }
